@@ -42,6 +42,7 @@ router.post('/', async (req, res, next) => {
     try {
         const { error } = contactSchema.validate(req.body);
         if (error) {
+            console.error(`Validation Error: `, error.details) // add logs to see why this fails the test
             return res.status(400).json({ message: `missing required ${error.details[0].path[0]} field` });
         }
         const newContact = await addContact(req.body);
