@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1725255918764" clover="3.2.0">
-  <project timestamp="1725255918764" name="All files">
+<coverage generated="1725257237958" clover="3.2.0">
+  <project timestamp="1725257237958" name="All files">
     <metrics statements="103" coveredstatements="85" conditionals="20" coveredconditionals="13" methods="17" coveredmethods="15" elements="140" coveredelements="113" complexity="0" loc="103" ncloc="103" packages="3" files="3" classes="3"/>
     <package name="node-js-hw-02">
       <metrics statements="15" coveredstatements="13" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="0"/>
