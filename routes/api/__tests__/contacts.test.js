@@ -1,3 +1,4 @@
+// routes/api/contacts.test.js
 const request = require('supertest');
 const app = require('../../../app');
 const contactsModel = require('../../../models/contacts');
@@ -5,8 +6,8 @@ jest.mock('../../../models/contacts.js');
 
 describe('Contacts API', () => {
   const mockContacts = [
-    { id: '1', name: 'John Doe', email: 'john@example.com', phone: '1234567890' },
-    { id: '2', name: 'Jane Doe', email: 'jane@example.com', phone: '0987654321' },
+    { id: '1', name: 'John Doe', email: 'john@example.com', phone: '1234567890', favorite: false },
+    { id: '2', name: 'Jane Doe', email: 'jane@example.com', phone: '0987654321', favorite: false },
   ];
 
   beforeEach(() => {
@@ -48,5 +49,37 @@ describe('Contacts API', () => {
     const response = await request(app).put('/api/contacts/1').send(updatedContact);
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual({ id: '1', ...updatedContact });
+  });
+
+  test('PATCH /api/contacts/:contactId/favorite should update the favorite status', async () => {
+    const updatedContact = { id: '1', name: 'John Doe', email: 'john@example.com', phone: '1234567890', favorite: true };
+    contactsModel.updateStatusContact.mockResolvedValue(updatedContact);
+
+    const response = await request(app)
+      .patch('/api/contacts/1/favorite')
+      .send({ favorite: true });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual(updatedContact);
+  });
+
+  test('PATCH /api/contacts/:contactId/favorite should return 400 if favorite is missing', async () => {
+    const response = await request(app)
+      .patch('/api/contacts/1/favorite')
+      .send({});
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toEqual({ message: 'missing field favorite' });
+  });
+
+  test('PATCH /api/contacts/:contactId/favorite should return 404 if contact not found', async () => {
+    contactsModel.updateStatusContact.mockResolvedValue(null);
+
+    const response = await request(app)
+      .patch('/api/contacts/999/favorite')
+      .send({ favorite: true });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toEqual({ message: 'Not found' });
   });
 });

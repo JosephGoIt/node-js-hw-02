@@ -1,15 +1,13 @@
-const fs = require('fs/promises');
-const path = require('path');
+const mongoose = require('mongoose');
 const contactsModel = require('../contacts');
-jest.mock('fs/promises');
+const Contact = require('../contact');
+
+jest.mock('../contact'); // Mock the Contact model
 
 const mockContacts = [
-  { id: '1', name: 'John Doe', email: 'john@example.com', phone: '1234567890' },
-  { id: '2', name: 'Jane Doe', email: 'jane@example.com', phone: '0987654321' },
+  { _id: new mongoose.Types.ObjectId(), name: 'John Doe', email: 'john@example.com', phone: '1234567890', favorite: false },
+  { _id: new mongoose.Types.ObjectId(), name: 'Jane Doe', email: 'jane@example.com', phone: '0987654321', favorite: false },
 ];
-
-const contactsPath = path.join(__dirname, '../contacts.json');
-const tempContactsPath = `${contactsPath}.tmp`;
 
 describe('Contacts Model', () => {
   beforeEach(() => {
@@ -17,71 +15,46 @@ describe('Contacts Model', () => {
   });
 
   test('listContacts should return all contacts', async () => {
-    fs.readFile.mockResolvedValue(JSON.stringify(mockContacts));
+    Contact.find.mockResolvedValue(mockContacts); // Mock the find method
     const contacts = await contactsModel.listContacts();
     expect(contacts).toEqual(mockContacts);
   });
 
   test('getContactById should return a contact by ID', async () => {
-    fs.readFile.mockResolvedValue(JSON.stringify(mockContacts));
-    const contact = await contactsModel.getContactById('1');
+    Contact.findById.mockResolvedValue(mockContacts[0]); // Mock the findById method
+    const contact = await contactsModel.getContactById(mockContacts[0]._id);
     expect(contact).toEqual(mockContacts[0]);
   });
 
   test('getContactById should return null if contact not found', async () => {
-    fs.readFile.mockResolvedValue(JSON.stringify(mockContacts));
-    const contact = await contactsModel.getContactById('3');
+    Contact.findById.mockResolvedValue(null); // Mock the findById method to return null
+    const contact = await contactsModel.getContactById(new mongoose.Types.ObjectId());
     expect(contact).toBeNull();
   });
 
   test('addContact should add a new contact', async () => {
-    fs.readFile.mockResolvedValue(JSON.stringify(mockContacts));
-    fs.writeFile.mockResolvedValue();
-
-    const newContact = { name: 'New Contact', email: 'new@example.com', phone: '1122334455' };
+    const newContact = { _id: new mongoose.Types.ObjectId(), name: 'New Contact', email: 'new@example.com', phone: '1122334455' };
+    Contact.create.mockResolvedValue(newContact); // Mock the create method
     const result = await contactsModel.addContact(newContact);
-
-    expect(result).toHaveProperty('id');
-    expect(result.name).toBe(newContact.name);
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      tempContactsPath,
-      expect.stringContaining(newContact.name)
-    );
+    expect(result).toEqual(newContact);
   });
 
   test('removeContact should remove a contact by ID', async () => {
-    fs.readFile.mockResolvedValue(JSON.stringify(mockContacts));
-    fs.writeFile.mockResolvedValue();
-
-    const result = await contactsModel.removeContact('1');
+    Contact.findByIdAndDelete.mockResolvedValue(mockContacts[0]); // Mock the findByIdAndDelete method
+    const result = await contactsModel.removeContact(mockContacts[0]._id);
     expect(result).toBe(true);
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      tempContactsPath,
-      expect.not.stringContaining(mockContacts[0].name)
-    );
   });
 
   test('updateContact should update an existing contact', async () => {
-    fs.readFile.mockResolvedValue(JSON.stringify(mockContacts));
-    fs.writeFile.mockResolvedValue();
-
-    const updatedContact = { name: 'Updated Name' };
-    const result = await contactsModel.updateContact('1', updatedContact);
-
+    const updatedContact = { name: 'Updated Contact' };
+    Contact.findByIdAndUpdate.mockResolvedValue({ ...mockContacts[0], ...updatedContact }); // Mock the findByIdAndUpdate method
+    const result = await contactsModel.updateContact(mockContacts[0]._id, updatedContact);
     expect(result).toEqual({ ...mockContacts[0], ...updatedContact });
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      tempContactsPath,
-      expect.stringContaining(updatedContact.name)
-    );
   });
 
   test('updateContact should return null if contact not found', async () => {
-    fs.readFile.mockResolvedValue(JSON.stringify(mockContacts));
-
-    const updatedContact = { name: 'Updated Name' };
-    const result = await contactsModel.updateContact('3', updatedContact);
-
+    Contact.findByIdAndUpdate.mockResolvedValue(null); // Mock the findByIdAndUpdate method to return null
+    const result = await contactsModel.updateContact(new mongoose.Types.ObjectId(), { name: 'Updated Contact' });
     expect(result).toBeNull();
-    expect(fs.writeFile).not.toHaveBeenCalled();
   });
 });
