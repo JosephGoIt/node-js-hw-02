@@ -1,6 +1,6 @@
 // server.js
-const app = require('./app');
-const connectDB = require('./db');
+const {app, connectDB} = require('./app');
+// const connectDB = require('./db');
 
 // Connect to MongoDB
 connectDB();
